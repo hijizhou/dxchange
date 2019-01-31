@@ -595,7 +595,7 @@ def app_ssrl_xrm_mosaic_metadata(fname):
     ssrl_regex_ref = re.compile(
          'rep(\d{2})_ref_(\d{5})_?([-a-zA-Z0-9_]+)_(-?\d{3,4}.\d{2})_Degree_([0-9.]+)_eV_(\d{3})of(\d{3}).xrm'
     )
-    # Check for reference frames
+    # Check for frames
     ref_result = ssrl_regex_ref.search(fname)
     tomo_result = ssrl_regex_tomo.search(fname)
     if tomo_result:
@@ -625,9 +625,9 @@ def app_ssrl_xrm_mosaic_metadata(fname):
     return params
 
 
-def read_slac_ssrl(image_directory, ind_tomo, ind_flat,
+def read_slac_ssrl(image_directory, ind_tomo, ind_ref,
                  image_file_pattern='image_00000.xrm',
-                 flat_file_pattern='ref_00000.xrm', proj=None, sino=None):
+                 ref_file_pattern='ref_00000.xrm', proj=None, sino=None):
     """
     Read the tomography data from Stanford Synchrotron Radiation Lightsource (SSRL), SLAC National Accelerator Laboratory
     basically a series of xrm files.
@@ -669,11 +669,31 @@ def read_slac_ssrl(image_directory, ind_tomo, ind_flat,
     """
     image_directory = os.path.abspath(image_directory)
 
-    image_file_pattern = 'rep*_*_*_*_Degree_x*_y*_*_ev_*of*.xrm'
-    flat_file_pattern = 'rep*_ref_*_*_*_Degree_*_ev_*of*.xrm'
+    ssrl_regex_tomo = re.compile(
+        'rep(\d{2})_(\d{5})_?([-a-zA-Z0-9_]+)_(-?\d{3,4}.\d{2})_Degree_x(\d{2})_y(\d{2})_([0-9.]+)_eV_(\d{3})of(\d{3}).xrm'
+    )
+    ssrl_regex_ref = re.compile(
+        'rep(\d{2})_ref_(\d{5})_?([-a-zA-Z0-9_]+)_(-?\d{3,4}.\d{2})_Degree_([0-9.]+)_eV_(\d{3})of(\d{3}).xrm'
+    )
 
+    fname = dxreader._check_read(image_directory)
+    list_fname = dxreader._list_file_stack(fname, 0)
 
+    number_of_images = len(ind)
+    arr, metadata = _init_ole_arr_from_stack(
+        list_fname[0], number_of_images, slc)
+    del metadata["thetas"][0]
+    del metadata["x_positions"][0]
+    del metadata["y_positions"][0]
 
+    for m, fname in enumerate(list_fname):
+        arr[m], angle_metadata = read_xrm(fname, slc)
+        metadata["thetas"].append(angle_metadata["thetas"][0])
+        metadata["x_positions"].append(angle_metadata["x_positions"][0])
+        metadata["y_positions"].append(angle_metadata["y_positions"][0])
+
+    _log_imported_data(fname, arr)
+    return arr, metadata
 
 
 
