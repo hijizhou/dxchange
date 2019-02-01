@@ -714,10 +714,12 @@ def read_slac_ssrl(image_directory, ind, slc=None):
             continue  # Skip non-TXM files
         arr, angle_metadata = read_ssrl_xrm(fname, slc)
 
+        print('Loading - '+fname)
+
         if angle_metadata["is_ref"]:
-            flat[m] = arr
+            flat[m-1] = arr
         else:
-            tomo[m] = arr
+            tomo[m-1] = arr
             metadata["thetas"] = np.append(metadata["thetas"], angle_metadata["thetas"][0])
             metadata["degree"] = np.append(metadata["degree"], angle_metadata["degree"][0])
             metadata["is_ref"] = np.append(metadata["is_ref"], angle_metadata["is_ref"][0])
