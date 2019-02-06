@@ -13,7 +13,7 @@ import dxchange
 
 if __name__ == '__main__':
     # Set path to the micro-CT data to reconstruct.
-    fname = 'data_dir/'
+    fname = '/media/hijizhou/Data2/SLAC/brain2_single_mosaic_MOSAIC_180722_2023'
 
     proj_start = 0
     proj_end = 1800
@@ -27,8 +27,11 @@ if __name__ == '__main__':
     start = 0
     end = 16
 
+    file_pattern = 'rep01_00000_brain2_single_mosaic_x00_y00_00000.00_eV_001of001.xrm'
+    ref_pattern = 'rep01_ref_00000_brain2_single_mosaic_00000.00_eV_001of003.xrm'
     # APS 26-ID has an x-radia system collecting raw data as xrm.
-    proj, flat, metadata = dxchange.read_aps_26id(fname, ind_tomo, ind_flat,
+    proj, flat, metadata = dxchange.read_ssrl_xrm(fname, ind_tomo, ind_flat, image_file_pattern=file_pattern,
+                  flat_file_pattern=ref_pattern,
                                                  sino=(start, end))
 
     # make the darks

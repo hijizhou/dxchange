@@ -618,11 +618,63 @@ def read_ssrl_xrm_mosaic_metadata(fname):
         msg = msg.format(filename=fname, flavor='ssrl')
     return params
 
+def read_ssrl_xrm2(image_directory, ind_tomo, ind_flat,
+                 image_file_pattern='image_00000.xrm',
+                 flat_file_pattern='ref_00000.xrm', proj=None, sino=None):
+    """
+    Read APS 8-BM tomography data from a stack of xrm files.
+
+    Parameters
+    ----------
+    image_directory : str
+        Path to data folder name without indices and extension.
+
+    ind_tomo : list of int
+        Indices of the projection files to read.
+
+    ind_flat : list of int
+        Indices of the flat field files to read.
+
+    image_file_pattern: string
+        Specify how the projection files are named.
+
+    flat_file_pattern: string
+        Specify how the flat reference files are named.
+
+    proj : {sequence, int}, optional
+        Specify projections to read. (start, end, step)
+
+    sino : {sequence, int}, optional
+        Specify sinograms to read. (start, end, step)
+
+    Returns
+    -------
+    ndarray
+        3D tomographic data.
+
+    ndarray
+        3D flat field data.
+
+    dictionary
+        Image set metadata.
+    """
+    image_directory = os.path.abspath(image_directory)
+    tomo_name = os.path.join(image_directory, 'radios/', image_file_pattern)
+    flat_name = os.path.join(image_directory, 'flats/', flat_file_pattern)
+    if proj is not None:
+        ind_tomo = ind_tomo[slice(*proj)]
+    tomo, metadata = dxreader.read_ssrl_xrm_stack(
+        tomo_name, ind=ind_tomo, slc=(sino, None))
+
+    flat, _ = dxreader.read_ssrl_xrm_stack(
+        flat_name, ind=ind_flat, slc=(sino, None))
+    return tomo, flat, metadata
 
 def read_ssrl_xrm(fname, slc=None):
     arr, metadata = dxreader.read_xrm(fname, slc)
     metadata_app = read_ssrl_xrm_mosaic_metadata(fname)
-    metadata = {**metadata, **metadata_app}
+   # metadata = {**metadata, **metadata_app}
+    metadata = dict(metadata.items() + metadata_app.items())
     return arr, metadata
 
 

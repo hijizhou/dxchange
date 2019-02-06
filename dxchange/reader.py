@@ -276,6 +276,54 @@ def read_xrm_stack(fname, ind, slc=None):
     _log_imported_data(fname, arr)
     return arr, metadata
 
+def read_ssrl_xrm_stack(fname, ind, slc=None):
+    """
+    Read data from stack of xrm files in a folder.
+
+    Parameters
+    ----------
+    fname : str
+        One of the file names in the tiff stack.
+    ind : list of int
+        Indices of the files to read.
+    slc : sequence of tuples, optional
+        Range of values for slicing data in each axis.
+        ((start_1, end_1, step_1), ... , (start_N, end_N, step_N))
+        defines slicing parameters for each axis of the data matrix.
+
+    Returns
+    -------
+    ndarray
+        Output 3D image.
+    """
+    fname = _check_read(fname)
+    list_fname = _list_file_stack(fname, ind)
+
+    number_of_images = len(ind)
+    arr, metadata = _init_ole_arr_from_stack(
+        list_fname[0], number_of_images, slc)
+    # del metadata["thetas"][0]
+    # del metadata["x_positions"][0]
+    # del metadata["y_positions"][0]
+    # del metadata["z_positions"][0]
+
+    metadata["thetas"] = np.delete(metadata["thetas"], 0)
+    metadata["x_positions"] = np.delete(metadata["x_positions"], 0)
+    metadata["y_positions"] = np.delete(metadata["y_positions"], 0)
+
+    for m, fname in enumerate(list_fname):
+        arr[m], angle_metadata = read_xrm(fname, slc)
+        # metadata["thetas"].append(angle_metadata["thetas"][0])
+        # metadata["x_positions"].append(angle_metadata["x_positions"][0])
+        # metadata["y_positions"].append(angle_metadata["y_positions"][0])
+        # metadata["z_positions"].append(angle_metadata["z_positions"][0])
+
+        metadata["thetas"] = np.append(metadata["thetas"], angle_metadata["thetas"][0])
+        metadata["x_positions"] = np.append(metadata["x_positions"], angle_metadata["x_positions"][0])
+        metadata["y_positions"] = np.append(metadata["y_positions"], angle_metadata["y_positions"][0])
+
+    _log_imported_data(fname, arr)
+    return arr, metadata
 
 def read_aps_1id_metafile(metafn):
     """
